@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "hypospray"
+version = "0.1.0"
+description = "Find and resolve kubernetes issues, automatically."
+authors = ["Spencer Krum <nibz@spencerkrum.com>"]
+license = "Apache2"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
