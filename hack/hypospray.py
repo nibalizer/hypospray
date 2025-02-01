@@ -25,22 +25,25 @@ command = "get pods"
 output = kubectl_command(command, namespace=namespace)
 print(output)
 
+from langchain_ollama import ChatOllama
+
+llm = ChatOllama(
+    model="llama3.1:8b-instruct-fp16",
+    base_url="http://10.80.50.15:11434",
+    temperature=0,
+    # other params...
+)
+
+from langchain_core.messages import AIMessage
+
+messages = [
+    (
+        "system",
+        "You are a helpful devops infrastructure assistant. Given this kubectl output, can you see anything wrong or that need an admin to address? Be helpful but concise."
+    ),
+    ("human", f"{output}"),
+]
+ai_msg = llm.invoke(messages)
 
 
-url = "http://10.80.50.15:11434/api/generate" # gpu
-headers = {
-    "Content-Type": "application/json"
-}
-payload = {
-    "model": "llama3.1:8b-instruct-fp16",
-    "stream": False,
-    "prompt": f"Given this kubectl output, can you see anything wrong or that need an admin to address? Be helpful but concise.\n{output}"
-}
-
-#print(payload)
-
-response = requests.post(url, json=payload, headers=headers)
-#print(response.text)
-print()
-
-print(response.json()["response"])
+print(ai_msg)
