@@ -10,6 +10,7 @@ readme = "README.md"
 python = "^3.13"
 requests = "^2.32.3"
 langchain-ollama = "^0.2.3"
+langgraph = "^0.2.69"
 
 
 [build-system]
