@@ -13,6 +13,82 @@ langchain-ollama = "^0.2.3"
 langgraph = "^0.2.69"
 
 
+[tool.poetry.group.test.dependencies]
+ruff = "^0.9.4"
+pytest = "^8.3.4"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+######################################################################################
+# ruff
+#
+
+[tool.ruff]
+src = ["src"]
+line-length = 88
+extend-exclude = [
+    "_vendor",
+    "./build",
+    ".scratch",
+    "data",
+]
+
+[tool.ruff.lint]
+ignore = [
+    "B019",
+    "B020",
+    "B904", # Ruff enables opinionated warnings by default
+    "B905", # Ruff enables opinionated warnings by default
+]
+select = [
+    "ASYNC",
+    "B",
+    "C4",
+    "C90",
+    "E",
+    "F",
+    "G",
+    "I",
+    "ISC",
+    "PERF",
+    "PLE",
+    "PLR0",
+    "W",
+    "RUF100",
+    "UP",
+    "FA102",  # future-required-type-annotation
+]
+
+[tool.ruff.lint.isort]
+section-order = [
+  "future",
+  "standard-library",
+  "third-party",
+  "vendored",
+  "first-party",
+  "tests",
+  "local-folder",
+]
+
+[tool.ruff.lint.isort.sections]
+"vendored" = ["pip._vendor"]
+"tests" = ["tests"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 33  # default is 10
+
+[tool.ruff.lint.per-file-ignores]
+"noxfile.py" = ["G"]
+"src/pip/_internal/*" = ["PERF203"]
+"tests/*" = ["B011"]
+"tests/unit/test_finder.py" = ["C414"]
+"src/pip/__pip-runner__.py" = ["UP"] # Must be compatible with Python 2.7
+
+[tool.ruff.lint.pylint]
+max-args = 15  # default is 5
+max-branches = 28  # default is 12
+max-returns = 13  # default is 6
+max-statements = 134  # default is 50
+
