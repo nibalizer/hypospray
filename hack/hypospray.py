@@ -1,30 +1,20 @@
 import subprocess
-import requests
 import sys
 
-from langchain_core.messages import AIMessage
-from typing import List
+#from langchain_anthropic import ChatAnthropic
+from typing import Literal
 
+import requests
+from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
 from langchain_ollama import ChatOllama
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import END, START, MessagesState, StateGraph
 
 #graph
-from langgraph.prebuilt import create_react_agent
-from langgraph.checkpoint.memory import MemorySaver
-#from langchain_anthropic import ChatAnthropic
-from langchain_core.tools import tool
-from typing import Literal
+from langgraph.prebuilt import ToolNode
 from pydantic import BaseModel, Field
 
-from langchain_core.tools import tool
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph import END, START, StateGraph, MessagesState
-from langgraph.prebuilt import ToolNode
-from langgraph.errors import GraphRecursionError
-
-from langgraph.graph import StateGraph, END
-from langgraph.prebuilt import ToolNode
-from langchain_core.messages import HumanMessage
 # https://langchain-ai.github.io/langgraph/how-tos/react-agent-structured-output/#define-graph_1
 
 
@@ -264,6 +254,7 @@ app = workflow.compile(checkpointer=checkpointer)
 # The config is the **second positional argument** to stream() or invoke()!
 #print(app.get_graph().draw_mermaid())
 import sys
+
 #sys.exit(1)
 
 # Example usage
