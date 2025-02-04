@@ -1,0 +1,21 @@
+---
+# bad image/pull policy
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broken-deployment
+  annotations:
+    hypospray/testname: 03-image-pull-policy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: broken-app
+  template:
+    metadata:
+      labels:
+        app: broken-app
+    spec:
+      containers:
+      - name: broken-container
+        image: bad-container.example.com/bad

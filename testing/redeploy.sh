@@ -26,8 +26,8 @@ echo "Initial Deployment completed, status:"
 
 for e in $envs
 do
-    echo $e
     NAMESPACE=hypospray-$e
+    echo "inspecting namespace $NAMESPACE"
     kubectl -n $NAMESPACE get all
 done
 

@@ -1,0 +1,49 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+  annotations:
+    hypospray/testname: 04-request-limits
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app2
+  template:
+    metadata:
+      labels:
+        app: app2
+    spec:
+      containers:
+      - name: container
+        image: nginx
+        resources:
+          limits:
+            cpu: "1m"
+            memory: "1m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  annotations:
+    hypospray/testname: 04-request-limits
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      containers:
+      - name: container
+        image: nginx
+        resources:
+          requests:
+            cpu: "1Gi" # Invalid request, CPU should be in millicores (100m-1100m)
+          limits:
+            memory: "2G"
