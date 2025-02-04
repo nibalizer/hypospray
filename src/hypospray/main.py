@@ -1,8 +1,7 @@
 import subprocess
 import sys
 
-#from langchain_anthropic import ChatAnthropic
-from typing import Literal
+from typing import Literal, List
 
 import requests
 from langchain_core.messages import HumanMessage
@@ -11,13 +10,10 @@ from langchain_ollama import ChatOllama
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, MessagesState, StateGraph
 
-#graph
 from langgraph.prebuilt import ToolNode
 from pydantic import BaseModel, Field
 
-from .tools import kubectl_get_events, kubectl_get, kubectl_describe, kubectl_logs
-
-# https://langchain-ai.github.io/langgraph/how-tos/react-agent-structured-output/#define-graph_1
+from .tools import kubectl_get_events, kubectl_get, kubectl_describe, kubectl_logs, kubectl_start_data
 
 
 namespace = sys.argv[1]
@@ -33,19 +29,18 @@ def ping_ollama(url):
         return f"Request Error: {e}"
 
 
-
-
 class HyposprayResponse(BaseModel):
     """Respond to the user with this"""
 
-    green: bool = Field(description="The status of the environment, green if everything looks good, red if anything looks wrong")
-    erroring_resources: str = Field(description="List of Kubernetes objects that are in causing the issue, examples: deployment/my-app, pod/my-app-1234, svc/my-service, node/node02")
+    green: bool = Field(description="The status of the environment, true if everything is running correctly, false if anything is erroring or misconfigured")
+    erroring_resources: List [str] = Field(description="List of Kubernetes objects that are causing the issue, in an error state, or misconfigured examples: deployment/my-app, pod/my-app-1234, svc/my-service, node/node02")
 
 
 # Inherit 'messages' key from MessagesState, which is a list of chat messages
 class AgentState(MessagesState):
     # Final structured response from the agent
     final_response: HyposprayResponse
+    namespace: str
 
 
 
@@ -84,32 +79,9 @@ llm_tools = [kubectl_get_events, kubectl_get, kubectl_logs, kubectl_describe]
 
 base_llm = ChatOllama(
     model="llama3.1:8b-instruct-fp16",
-    #base_url="http://10.80.50.15:11434",
-    #base_url="http://localhost:11434",
     base_url=ollama_url,
     temperature=0,
-    # other params...
 )
-
-
-
-#messages = [
-#    (
-#        "system",
-#        "You are a helpful devops infrastructure assistant. Given this kubectl output, can you see anything wrong? What is the root issue? Fully explain all errors that you see."
-#    ),
-#    ("human", f"{output}"),
-#]
-
-
-#{"role": "user", "content": "what is the weather in sf"}]
-#ai_msg = base_llm.invoke(messages)
-
-
-#print(ai_msg)
-#print(ai_msg.tool_calls)
-
-
 
 
 llm_with_tools =  base_llm.bind_tools(llm_tools)
@@ -118,7 +90,6 @@ llm_with_structured_output = base_llm.with_structured_output(HyposprayResponse)
 tool_node = ToolNode(llm_tools)
 
 # Define a new graph
-#workflow = StateGraph(MessagesState)
 workflow = StateGraph(AgentState)
 
 # Define the two nodes we will cycle between
@@ -160,31 +131,17 @@ checkpointer = MemorySaver()
 # Note that we're (optionally) passing the memory when compiling the graph
 app = workflow.compile(checkpointer=checkpointer)
 
-# Use the agent (og)
-#try:
-#    final_state = app.invoke(
-#        {"messages": messages},
-#        config={"configurable": {"thread_id": 42}, "recursion_limit": 8}
-#    )
-#except GraphRecursionError:
-#    print("Recursion Error")
-#print(final_state["messages"][-1].content)
-
-#user_input = "Hi there! My name is Will."
 
 # The config is the **second positional argument** to stream() or invoke()!
 #print(app.get_graph().draw_mermaid())
-import sys
 
-#sys.exit(1)
 
 # Example usage
-#print("ping ollama")
+print("ping ollama")
 ping_ollama(ollama_url)
-command = "get all"
-k_get_all_output = kubectl_command(command, namespace=namespace)
+k_get_all_output = kubectl_start_data(namespace=namespace)
 
-start_messages = {"role": "user", "content": f"As a devops infrastructure & containers expert, read the following kubectl output and determine if anything is wrong. Remember that you'll have to run kubectl get commands to discover the names of resource that you can then inspect in detail in a later tool call. What is the root issue? You can run a function, get the result, and then run another function until you are satisfied. Explain and debug the issue, if any. Clearly state if there is an issue and provide a list of kubernetes objects that are in an error state. \n{k_get_all_output}"}
+start_messages = {"role": "user", "content": f"As a devops infrastructure & containers expert, read the following kubectl output and determine if anything is wrong. Remember that you'll have to run kubectl get commands to discover the names of resource that you can then inspect in detail in a later tool call. What is the root issue? You can run a function, get the result, and then run another function until you are satisfied. Explain and debug the issue, if any. Clearly state if there is an error or misconfiguration and provide a list of kubernetes objects that are in an error state. \n{k_get_all_output}"}
 #print("Start Messages:", start_messages['content'])
 #print(output)
 """
@@ -207,15 +164,14 @@ except GraphRecursionError:
 
 """
 
+answer = app.invoke(input={"messages": start_messages,
+                           "namespace": namespace, # this is where we set k8s namespace
+                           },
+                    config={"configurable": {"thread_id": 42}, "recursion_limit": 40},
+                   )
 
-answer = app.invoke(input={"messages": start_messages},
-                      config={"configurable": {"thread_id": 42}, "recursion_limit": 40},
-                      )
-
+for i in answer["messages"]:
+    i.pretty_print()
+print("====")
 print("Total messages:", len(answer['messages']))
 print(answer[ "final_response" ])
-#from pdb import set_trace; set_trace()
-
-
-
-
