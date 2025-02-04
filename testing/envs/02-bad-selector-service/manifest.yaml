@@ -1,0 +1,81 @@
+---
+#01-InvalidSelector.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: invalid-selector-service
+spec:
+  selector:
+    invalid-key: value # Invalid key in the selector
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+# 02-ExtraKey.yam
+apiVersion: v1
+kind: Service
+metadata:
+  name: extra-key-service
+spec:
+  selector:
+    extra-key: value # Extra key in the selector, not matching any Pod label
+    valid-key: valid-value
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: extra-key-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: extra-key
+      valid-key: valid-value # Extra key that doesn't exist in the Service selector
+  template:
+    metadata:
+      labels:
+        app: extra-key
+        valid-key: valid-value
+    spec:
+      containers:
+      - name: extra-key-container
+        image: nginx:latest
+---
+#03-MismatchedKey.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mismatched-key-service
+spec:
+  selector:
+    key: value # Mismatched key in the selector, not matching any Pod label
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+# 04-EmptySelector.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: empty-selector-service
+spec:
+  selector: {} # Empty selector, no key-value pairs
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+# 05-missing-key.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: missing-key-service
+spec:
+  selector:
+    valid-key: # Missing value for a key in the selector
+  ports:
+  - port: 80
+    targetPort: 8080
+

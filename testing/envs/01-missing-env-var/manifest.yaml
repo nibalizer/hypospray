@@ -1,0 +1,26 @@
+---
+# 01-missing-env-var
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broken-deployment
+  annotations:
+    hypospray/testname: 01-missing-env-var
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: broken-app
+  template:
+    metadata:
+      labels:
+        app: broken-app
+    spec:
+      containers:
+      - name: broken-container
+        image: replaceme
+        env:
+        - name: MY_OTHER_ENV_VAR
+          value: test
+#       - name: MY_EXPECTED_ENV_VAR
+#         value: ${MY_ENV_VAR}
