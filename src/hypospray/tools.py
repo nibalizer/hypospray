@@ -24,7 +24,19 @@ def _kubectl_command(command, namespace="default"):
         return f"Command failed with status {e.returncode}:\n{e.output.decode('utf-8')}"
 
 def kubectl_start_data(namespace="default"):
-    return _kubectl_command("get all", namespace=namespace)
+    out = "\n"
+    out += "> kubectl get all\n"
+    out += _kubectl_command("get all", namespace=namespace)
+    out += "> kubectl get events\n"
+    out += _kubectl_command("get events", namespace=namespace)
+    out += "> kubectl get ingress\n"
+    out += _kubectl_command("get ingress", namespace=namespace)
+#    out += "kubectl get nodes --show-labels\n"
+#    out += _kubectl_command("get nodes --show-labels", namespace=namespace)
+#    out += "kubectl version\n"
+#    out += _kubectl_command("version", namespace=namespace)
+    return out
+
 
 @tool
 def kubectl_get_events(state: Annotated[dict, InjectedState]) -> str:

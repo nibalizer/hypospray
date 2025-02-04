@@ -68,8 +68,12 @@ def respond(state: AgentState):
     # We call the model with structured output in order to return the same format to the user every time
     # state['messages'][-2] is the last ToolMessage in the convo, which we convert to a HumanMessage for the model to use
     # We could also pass the entire chat history, but this saves tokens since all we care to structure is the output of the tool
+
+    # We also pass in a fresh kube state to help with k8s object identification
+    k_get_all_output = kubectl_start_data(namespace=namespace)
     response = llm_with_structured_output.invoke(
-        [HumanMessage(content=state["messages"][-2].content)]
+        [HumanMessage(content=k_get_all_output),
+         HumanMessage(content=state["messages"][-2].content)]
     )
     # We return the final answer
     return {"final_response": response}
@@ -141,7 +145,7 @@ print("ping ollama")
 ping_ollama(ollama_url)
 k_get_all_output = kubectl_start_data(namespace=namespace)
 
-start_messages = {"role": "user", "content": f"As a devops infrastructure & containers expert, read the following kubectl output and determine if anything is wrong. Remember that you'll have to run kubectl get commands to discover the names of resource that you can then inspect in detail in a later tool call. What is the root issue? You can run a function, get the result, and then run another function until you are satisfied. Explain and debug the issue, if any. Clearly state if there is an error or misconfiguration and provide a list of kubernetes objects that are in an error state. \n{k_get_all_output}"}
+start_messages = {"role": "user", "content": f"As a devops infrastructure & containers expert, use your tools to inspect the kubernetes cluster and determine if anything is wrong. Remember that you'll have to run kubectl get commands to discover the names of resource that you can then inspect in detail in a later tool call. You can run a function, get the result, and then run another function until you are satisfied. Is the application healthy? Explain and debug the issue, if any. Clearly state if there is an error or misconfiguration and provide a list of kubernetes objects that are in an error state. \n{k_get_all_output}"}
 #print("Start Messages:", start_messages['content'])
 #print(output)
 """
@@ -170,8 +174,8 @@ answer = app.invoke(input={"messages": start_messages,
                     config={"configurable": {"thread_id": 42}, "recursion_limit": 40},
                    )
 
-for i in answer["messages"]:
-    i.pretty_print()
+#for i in answer["messages"]:
+#    i.pretty_print()
 print("====")
 print("Total messages:", len(answer['messages']))
 print(answer[ "final_response" ])
