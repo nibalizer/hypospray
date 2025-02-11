@@ -33,7 +33,7 @@ class HyposprayResponse(BaseModel):
     """Respond to the user with this"""
 
     green: bool = Field(description="The status of the environment, true if everything is running correctly, false if anything is erroring or misconfigured")
-    erroring_resources: List [str] = Field(description="List of Kubernetes objects that are causing the issue, in an error state, or misconfigured examples: deployment/my-app, pod/my-app-1234, svc/my-service, node/node02")
+    erroring_resources: List [str] = Field(description="List of Kubernetes objects that are causing the issue, in an error state, or misconfigured examples: deployment/my-app, pod/my-app-1234, <type>/<name>")
 
 
 # Inherit 'messages' key from MessagesState, which is a list of chat messages
