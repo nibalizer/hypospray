@@ -6,12 +6,16 @@ authors = ["Spencer Krum <nibz@spencerkrum.com>"]
 license = "Apache2"
 readme = "README.md"
 
+[tool.poetry.scripts]
+hypospray = "hypospray.main:main"
+
 [tool.poetry.dependencies]
 python = "^3.13"
 requests = "^2.32.3"
 langchain-ollama = "^0.2.3"
 langgraph = "^0.2.69"
 types-requests = "^2.32.0.20241016"
+click = "^8.1.8"
 
 
 [tool.poetry.group.test.dependencies]

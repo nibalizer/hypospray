@@ -23,6 +23,7 @@ def _kubectl_command(command, namespace="default"):
         # If kubectl returns a non-zero exit code, print the error message and return it as a string.
         return f"Command failed with status {e.returncode}:\n{e.output.decode('utf-8')}"
 
+
 def kubectl_start_data(namespace="default"):
     out = "\n"
     out += "> kubectl get all\n"
@@ -31,6 +32,7 @@ def kubectl_start_data(namespace="default"):
     out += _kubectl_command("get events", namespace=namespace)
     out += "> kubectl get ingress\n"
     out += _kubectl_command("get ingress", namespace=namespace)
+
 #    out += "kubectl get nodes --show-labels\n"
 #    out += _kubectl_command("get nodes --show-labels", namespace=namespace)
 #    out += "kubectl version\n"
@@ -38,11 +40,13 @@ def kubectl_start_data(namespace="default"):
     return out
 
 
+
 @tool
 def kubectl_get_events(state: Annotated[dict, InjectedState]) -> str:
     """Get kubernetes events from all pods and deployments in a namespace with kubectl
 
     """
+
     namespace = state["namespace"]
     print("ran kube get events")
     # TODO raise value error here
@@ -63,8 +67,9 @@ def kubectl_get(resource_name: str, state: Annotated[dict, InjectedState]) -> st
     Args:
         resource_name (str): The resource type combined with the name
     """
+   # __import__('pdb').set_trace()
     namespace = state["namespace"]
-    print(f"ran kube get {resource_name}")
+    print(f"ran kube -n {namespace} get {resource_name}")
     if ";" in resource_name:
         return "error"
     if "secret" in resource_name:
