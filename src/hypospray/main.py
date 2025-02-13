@@ -46,6 +46,7 @@ class AgentState(MessagesState):
     # Final structured response from the agent
     final_response: HyposprayResponse
     namespace: str
+    show_tools: bool
 
 
 
@@ -80,8 +81,11 @@ def respond(state: AgentState):
     namespace = state["namespace"]
     k_get_all_output = kubectl_start_data(namespace=namespace)
     response = llm["structured"].invoke(
-        [HumanMessage(content=k_get_all_output),
-         HumanMessage(content=state["messages"][-2].content)]
+        [
+         HumanMessage(content=state["messages"][0].content),
+         HumanMessage(content=k_get_all_output),
+         HumanMessage(content=state["messages"][-2].content)
+        ]
     )
     # We return the final answer
     return {"final_response": response}
@@ -90,7 +94,9 @@ def respond(state: AgentState):
 
 @click.command()
 @click.argument("namespace", required=True, default="default")
-def main(namespace: str):
+@click.option("--explain", "-e", is_flag=True, show_default=True, default=False, required=False, help="Explain the findings with LLM generated text")
+@click.option("--show-tools", is_flag=True, show_default=True, default=False, required=False, help="Show the kubectl commands (tool calls) as they are being run")
+def main(namespace: str, explain: bool, show_tools: bool):
     print("Welcome to hypospray")
     llm_tools = [kubectl_get_events, kubectl_get, kubectl_logs, kubectl_describe]
 
@@ -160,7 +166,7 @@ def main(namespace: str):
     ping_ollama(ollama_url)
     k_get_all_output = kubectl_start_data(namespace=namespace)
 
-    start_messages = {"role": "user", "content": f"As a devops infrastructure & containers expert, use your tools to inspect the kubernetes cluster and determine if anything is wrong. Remember that you'll have to run kubectl get commands to discover the names of resource that you can then inspect in detail in a later tool call. You can run a function, get the result, and then run another function until you are satisfied. Is the application healthy? Explain and debug the issue, if any. Clearly state if there is an error or misconfiguration and provide a list of kubernetes objects that are in an error state. \n{k_get_all_output}"}
+    start_messages = {"role": "user", "content": f"As a devops infrastructure & containers expert, use your tools to inspect the kubernetes cluster and determine if anything is wrong. Remember that you'll have to run kubectl get commands to discover the names of resource that you can then inspect in detail in a later tool call. You can run a function, get the result, and then run another function until you are satisfied. Is the application healthy? Explain and debug the issue, if any. Clearly state if there is an error or misconfiguration. Provide a list of kubernetes resources that are in an error state. \n{k_get_all_output}"}
     #print("Start Messages:", start_messages['content'])
     #print(output)
     """
@@ -185,6 +191,7 @@ def main(namespace: str):
 
     answer = app.invoke(input={"messages": start_messages,
                                "namespace": namespace, # this is where we set k8s namespace
+                               "show_tools": show_tools,
                                },
                         config={"configurable": {"thread_id": 42}, "recursion_limit": 40},
                        )
@@ -194,3 +201,5 @@ def main(namespace: str):
     print("====")
     print("Total messages:", len(answer['messages']))
     print(answer[ "final_response" ])
+    if explain:
+        print(answer['messages'][-1].content)

@@ -48,7 +48,8 @@ def kubectl_get_events(state: Annotated[dict, InjectedState]) -> str:
     """
 
     namespace = state["namespace"]
-    print("ran kube get events")
+    if state["show_tools"]:
+        print("ran kube get events")
     # TODO raise value error here
     # TODO detect return code and raise value error when kubectl errors
     return _kubectl_command("get events", namespace=namespace)
@@ -67,9 +68,9 @@ def kubectl_get(resource_name: str, state: Annotated[dict, InjectedState]) -> st
     Args:
         resource_name (str): The resource type combined with the name
     """
-   # __import__('pdb').set_trace()
     namespace = state["namespace"]
-    print(f"ran kube -n {namespace} get {resource_name}")
+    if state["show_tools"]:
+        print(f"ran kube -n {namespace} get {resource_name}")
     if ";" in resource_name:
         return "error"
     if "secret" in resource_name:
@@ -93,7 +94,8 @@ def kubectl_describe(resource_name: str, state: Annotated[dict, InjectedState]) 
         resource_name (str): The resource type combined with the name
     """
     namespace = state["namespace"]
-    print(f"ran kube describe {resource_name}")
+    if state["show_tools"]:
+        print(f"ran kube describe {resource_name}")
     if ";" in resource_name:
         return "error"
     return _kubectl_command(f"describe {resource_name}", namespace=namespace)
@@ -106,7 +108,8 @@ def kubectl_logs(pod_name: str, state: Annotated[dict, InjectedState]) -> str:
         pod_name (str): The name of the pod
     """
     namespace = state["namespace"]
-    print(f"ran kube logs {pod_name}")
+    if state["show_tools"]:
+        print(f"ran kube logs {pod_name}")
     if " " in pod_name:
         return "error"
     if ";" in pod_name:
