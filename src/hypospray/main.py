@@ -99,8 +99,13 @@ def respond(state: AgentState):
 @click.option("--json", "-j", "json_", is_flag=True, show_default=True, default=False, required=False, help="Output as json")
 @click.option("--show-tools", is_flag=True, show_default=True, default=False, required=False, help="Show the kubectl commands (tool calls) as they are being run")
 @click.option("--show-all-messages", is_flag=True, show_default=True, default=False, required=False, help="Show the internal tool calls and responses")
-def main(namespace: str, explain: bool, show_tools: bool, json_: bool, show_all_messages: bool):
-    print("Welcome to hypospray")
+@click.option("--draw-mermaid", is_flag=True, show_default=True, default=False, required=False, help="Show the LLM call graph in mermaid format and exit")
+@click.option("--quiet","-q", is_flag=True, show_default=True, default=False, required=False, help="Suppress noncritical output")
+def main(namespace: str, explain: bool, show_tools: bool, json_: bool, show_all_messages: bool, draw_mermaid: bool, quiet: bool):
+    if draw_mermaid:
+        quiet = True
+    if not quiet:
+        print("Welcome to hypospray")
     llm_tools = [kubectl_get_events, kubectl_get, kubectl_logs, kubectl_describe]
 
     base_llm = ChatOllama(
@@ -161,7 +166,9 @@ def main(namespace: str, explain: bool, show_tools: bool, json_: bool, show_all_
 
 
     # The config is the **second positional argument** to stream() or invoke()!
-    #print(app.get_graph().draw_mermaid())
+    if draw_mermaid:
+        print(app.get_graph().draw_mermaid())
+        sys.exit(0)
 
 
     # Example usage
