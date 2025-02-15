@@ -170,27 +170,6 @@ def main(namespace: str, explain: bool, show_tools: bool, json_: bool, show_all_
     k_get_all_output = kubectl_start_data(namespace=namespace)
 
     start_messages = {"role": "user", "content": f"As a devops infrastructure & containers expert, use your tools to inspect the kubernetes cluster and determine if anything is wrong. Remember that you'll have to run kubectl get commands to discover the names of resource that you can then inspect in detail in a later tool call. You can run a function, get the result, and then run another function until you are satisfied. Is the application healthy? Explain and debug the issue, if any. Clearly state if there is an error or misconfiguration. Provide a list of kubernetes resources that are in an error state. \n{k_get_all_output}"}
-    #print("Start Messages:", start_messages['content'])
-    #print(output)
-    """
-    counter=0
-    try:
-        events = app.stream(
-            {"messages": messages},
-            config={"configurable": {"thread_id": 42}, "recursion_limit": 20},
-            stream_mode="values"
-        )
-        for event in events:
-            print("***")
-            tot = len(event["messages"])
-            print("Total messages: ", tot)
-            for e in event["messages"][counter:]:
-                e.pretty_print()
-            counter = tot
-    except GraphRecursionError:
-        print("Recursion Error")
-
-    """
 
     answer = app.invoke(input={"messages": start_messages,
                                "namespace": namespace, # this is where we set k8s namespace
@@ -199,8 +178,6 @@ def main(namespace: str, explain: bool, show_tools: bool, json_: bool, show_all_
                         config={"configurable": {"thread_id": 42}, "recursion_limit": 40},
                        )
 
-    #for i in answer["messages"]:
-    #    i.pretty_print()
     result = {}
     result["green"] = answer["final_response"].green
     result["erroring_resources"] = answer["final_response"].erroring_resources
