@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import json
 
 from typing import Literal, List
 
@@ -95,8 +96,10 @@ def respond(state: AgentState):
 @click.command()
 @click.argument("namespace", required=True, default="default")
 @click.option("--explain", "-e", is_flag=True, show_default=True, default=False, required=False, help="Explain the findings with LLM generated text")
+@click.option("--json", "-j", "json_", is_flag=True, show_default=True, default=False, required=False, help="Output as json")
 @click.option("--show-tools", is_flag=True, show_default=True, default=False, required=False, help="Show the kubectl commands (tool calls) as they are being run")
-def main(namespace: str, explain: bool, show_tools: bool):
+@click.option("--show-all-messages", is_flag=True, show_default=True, default=False, required=False, help="Show the internal tool calls and responses")
+def main(namespace: str, explain: bool, show_tools: bool, json_: bool, show_all_messages: bool):
     print("Welcome to hypospray")
     llm_tools = [kubectl_get_events, kubectl_get, kubectl_logs, kubectl_describe]
 
@@ -198,8 +201,18 @@ def main(namespace: str, explain: bool, show_tools: bool):
 
     #for i in answer["messages"]:
     #    i.pretty_print()
-    print("====")
-    print("Total messages:", len(answer['messages']))
-    print(answer[ "final_response" ])
+    result = {}
+    result["green"] = answer["final_response"].green
+    result["erroring_resources"] = answer["final_response"].erroring_resources
+    result["num_messages"] = len(answer["messages"])
+    if show_all_messages:
+        result["messages"] = [i.content for i in answer["messages"]]
     if explain:
-        print(answer['messages'][-1].content)
+        result["explanation"] = answer['messages'][-1].content
+
+    if json:
+        print(json.dumps(result, indent=4))
+    else:
+        print(answer[ "final_response" ])
+        if explain:
+            print(answer['messages'][-1].content)
