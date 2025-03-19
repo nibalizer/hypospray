@@ -6,6 +6,10 @@ Find and resolve kubernetes issues, automatically.
 
 > A hypospray (colloquially, hypo) was a medical device used to inject liquids into the body. The system used a noninvasive transport mechanism of compressed air to transfer the injectant from the device into the subdermal layer below the skin of the body, or artery.[0]
 
+About
+-----
+
+Hypospray is an Agentic kubernetes debugging tool. It gathers information about the kubernetes namespace it is told to inspect and passes that information to the LLM. The LLM has been given kubernetes debugging [tools](https://medium.com/@yashpaddalwar/agents-and-tool-calling-in-agentic-frameworks-the-ultimate-guide-0ec446e89b55) it can use to gather more information and dig into problems. This is a level-up from traditional RAG where the application needs to decide which resources to inspect. Hypospray will always support local/self-hosted LLMs for security.
 
 Example Usage
 -------------
@@ -49,5 +53,14 @@ hypospray --help
 hypospray -e $NAMESPACE
 ```
 
+Contributing
+------------
+
+Contributions welcome!
+
+1. Fork the repository on GitHub
+2. Make changes
+3. Run the unit tests (you can skip functests if that's too hard to get working)
+3. Push changes and open a pull request
 
 [0] https://memory-alpha.fandom.com/wiki/Hypospray
